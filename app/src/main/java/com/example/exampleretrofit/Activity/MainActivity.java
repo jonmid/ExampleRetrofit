@@ -1,5 +1,6 @@
 package com.example.exampleretrofit.Activity;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -7,6 +8,7 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.example.exampleretrofit.Adapter.MoviesAdapter;
@@ -15,7 +17,9 @@ import com.example.exampleretrofit.Model.MovieResponse;
 import com.example.exampleretrofit.R;
 import com.example.exampleretrofit.Rest.ApiClient;
 import com.example.exampleretrofit.Rest.ApiInterface;
+import com.example.exampleretrofit.Util.RecyclerTouchListener;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -30,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private final static String API_KEY = "f6bc48e1a74b403aa448efe1703d19f9";
 
     RecyclerView recyclerView;
+
+    private List<Movie> movieList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +53,20 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
 
+        recyclerView.addOnItemTouchListener(new RecyclerTouchListener(getApplicationContext(), recyclerView, new RecyclerTouchListener.ClickListener() {
+            @Override
+            public void onClick(View view, int position) {
+                Movie movie = movieList.get(position);
+                nextActivity(movie.getTitle(), movie.getVoteCount(), movie.getOverview());
+                //Toast.makeText(getApplicationContext(), movie.getTitle() + " is selected!", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onLongClick(View view, int position) {
+                //
+            }
+        }));
+
         getDataApi();
     }
 
@@ -58,9 +78,9 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<MovieResponse>() {
             @Override
             public void onResponse(Call<MovieResponse>call, Response<MovieResponse> response) {
-                List<Movie> movies = response.body().getResults();
-                recyclerView.setAdapter(new MoviesAdapter(movies, R.layout.list_item_movie, getApplicationContext()));
-                Log.d(TAG, "Number of movies received: " + movies.size());
+                movieList = response.body().getResults();
+                recyclerView.setAdapter(new MoviesAdapter(movieList, R.layout.list_item_movie, getApplicationContext()));
+                Log.d(TAG, "Number of movies received: " + movieList.size());
             }
 
             @Override
@@ -69,5 +89,13 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, t.toString());
             }
         });
+    }
+
+    public void nextActivity(String title, Integer voteCount, String overView){
+        Intent intent = new Intent(this, DetailActivity.class);
+        intent.putExtra("title", title);
+        intent.putExtra("voteCount", voteCount);
+        intent.putExtra("overView", overView);
+        startActivity(intent);
     }
 }
