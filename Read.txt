@@ -1,0 +1,3 @@
+
+***** CRUD *****
+https://www.jackrutorial.com/2018/06/retrofit-2-crud-android-example.html
